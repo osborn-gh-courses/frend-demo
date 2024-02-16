@@ -9,6 +9,7 @@ use frenderer::{
 struct State {
     x: f32,
     y: f32,
+    frame: usize,
 }
 
 fn main() {
@@ -53,8 +54,8 @@ fn main() {
                     vec![Transform {
                         x: 1024.0 / 2.0,
                         y: 768.0 / 2.0,
-                        w: 16,
-                        h: 16,
+                        w: 32,
+                        h: 32,
                         rot: 0.0,
                     }],
                     vec![SheetRegion::new(0, 0, 578, 0, 16, 16)],
@@ -66,6 +67,7 @@ fn main() {
                     State {
                         x: 1024.0 / 2.0,
                         y: 768.0 / 2.0,
+                        frame: 0,
                     },
                 )
             },
@@ -101,11 +103,27 @@ fn main() {
                             acc -= DT;
                             state.x += input.key_axis(Key::ArrowLeft, Key::ArrowRight) * 2.0;
                             state.y += input.key_axis(Key::ArrowDown, Key::ArrowUp) * 2.0;
+                            state.frame += 1;
                             input.next_frame();
                         }
-                        let (trfs, _uvs) = frenderer.sprites_mut(0, 0..1);
+
+                        frenderer.sprite_group_resize(0, 2);
+                        let (trfs, uvs) = frenderer.sprites_mut(0, 0..2);
                         trfs[0].x = state.x;
                         trfs[0].y = state.y;
+                        if (state.frame / 10) % 2 == 0 {
+                            trfs[1] = Transform {
+                                x: 0.5 * 1024.0 / 2.0,
+                                y: 0.5 * 768.0 / 2.0,
+                                w: 64,
+                                h: 64,
+                                rot: state.frame as f32 * std::f32::consts::PI * DT,
+                            };
+                            uvs[1] = SheetRegion::new(0, 0, 646, 0, 16, 16);
+                        } else {
+                            trfs[1] = Transform::ZERO;
+                        }
+
                         frenderer.render();
                         window.request_redraw();
                     }
